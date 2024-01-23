@@ -1,9 +1,9 @@
 import ast
 import sys
 import time
+from datetime import datetime
 
 import clickhouse_connect
-from clickhouse_connect.driver.httpclient import HttpClient
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
 
@@ -15,14 +15,16 @@ def create_clickhouse_client():
 def prepare_clickhouse_record(events: list):
     # get keys
     keys = list(events[0].keys())
-    values = [[event.get(key) for key in keys] for event in events]
+    date_format = '%Y-%m-%d %H:%M:%S'
+    values = [[event.get(key) if key != 'time' else datetime.strptime(event.get(key), date_format) for key in keys] for
+              event in events]
     return values, keys
 
 
 def insert_batch_clickhouse(list_of_values: list, list_of_keys: list, client, table_name):
     print(list_of_keys)
     print(list_of_values)
-    client.insert(table=table_name, data=list_of_values, column_names=list_of_keys, column_type_names=['String','String','String','String','String','String','String'])
+    client.insert(table=table_name, data=list_of_values, column_names=list_of_keys)
 
     return True
 
@@ -56,18 +58,19 @@ def consume(consumer: Consumer, topic_name):
             msg = ast.literal_eval(msg.value().decode('utf-8'))
             return msg
 
+
 def consume_insert_loop():
-    kafka_consumer=creat_consumer('bama1')
-    client=create_clickhouse_client()
+    kafka_consumer = creat_consumer('bama1')
+    client = create_clickhouse_client()
     while True:
         print('start new loop!')
         if not kafka_consumer:
             kafka_consumer = creat_consumer('bama1')
         if not client:
             client = create_clickhouse_client()
-        msg=consume(kafka_consumer,'bama')
-        values,keys=prepare_clickhouse_record(msg)
-        status=insert_batch_clickhouse(values,keys,client,'bama_ads')
+        msg = consume(kafka_consumer, 'bama')
+        values, keys = prepare_clickhouse_record(msg)
+        status = insert_batch_clickhouse(values, keys, client, 'bama_ads')
         if status:
             print('inserted')
             print(msg)
