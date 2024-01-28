@@ -2,10 +2,13 @@ import ast
 import sys
 import time
 from datetime import datetime
-
 import clickhouse_connect
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
+
+"""
+clickhouse class for Bama API as Sink database
+"""
 
 def create_clickhouse_client():
     client = clickhouse_connect.get_client(host='localhost', port=8123)

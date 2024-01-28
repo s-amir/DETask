@@ -1,5 +1,7 @@
 import datetime
-
+"""
+Data model of Bama listener
+"""
 
 class EventData:
     def __init__(self, event):

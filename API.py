@@ -2,9 +2,11 @@ import datetime
 import http.client
 import json
 import time
-
 import models
-from confluent_kafka import Producer, cimpl
+from confluent_kafka import Producer
+
+"""API class note:It's more reliable to store data in Redis or memory-cache and also functions must be more 
+independent with each other"""
 
 
 class API_stream():
@@ -54,15 +56,16 @@ class API_stream():
     def produce_kafka_event(self, producer: Producer, event):
         try:
             if event:
-                event=json.dumps(event)
-                producer.produce(self.topic_name, key=str(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")), value=event)
+                event = json.dumps(event)
+                producer.produce(self.topic_name, key=str(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")),
+                                 value=event)
                 producer.flush()
             else:
                 print('event is null')
         except Exception as e:
             print(e)
             return False
-        print(f'{event} is produced' )
+        print(f'{event} is produced')
         return True
 
     def loop_API_fetch(self):
@@ -77,6 +80,4 @@ class API_stream():
 
 
 a = API_stream([], 'bama')
-# l=a.check_insert_event()
 a.loop_API_fetch()
-# print(*l)
